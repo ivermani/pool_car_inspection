@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Damage Inspector</title>
+    <link rel="manifest" href="data:application/json,{%22name%22:%22Vehicle%20Inspector%22,%22short_name%22:%22VehicleInspect%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%232563eb%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232563eb'/%3E%3Ctext x='50' y='55' font-family='Arial' font-size='60' fill='white' text-anchor='middle'%3EV%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22}]}">
+    <meta name="theme-color" content="#2563eb">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .vehicle-input {
+            margin-bottom: 24px;
+        }
+
+        .vehicle-input label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .vehicle-input input, .vehicle-input select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .vehicle-input input:focus, .vehicle-input select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .photo-section {
+            display: none;
+        }
+
+        .photo-section.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .current-shot {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .current-shot h3 {
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .current-shot p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .camera-view {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .vehicle-outline {
+            position: absolute;
+            top: 10%;
+            left: 20%;
+            right: 20%;
+            bottom: 30%;
+            border: 3px solid #10b981;
+            border-radius: 8px;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .vehicle-outline::before {
+            content: 'Align vehicle within this frame';
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .level-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .level-bubble {
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            transition: transform 0.1s;
+        }
+
+        .level-bubble.tilted {
+            background: #ef4444;
+        }
+
+        .capture-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .photo-preview {
+            width: 80px;
+            height: 60px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 2px solid #10b981;
+        }
+
+        .quality-check {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .quality-check.show {
+            display: block;
+        }
+
+        .quality-check.error {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+
+        .quality-check.success {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .shot-checklist {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .shot-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .shot-item:last-child {
+            border-bottom: none;
+        }
+
+        .shot-check {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .shot-check.completed {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .shot-check.current {
+            border-color: #2563eb;
+            background: #dbeafe;
+        }
+
+        .completion-screen {
+            display: none;
+            text-align: center;
+        }
+
+        .completion-screen.show {
+            display: block;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 36px;
+        }
+
+        .download-btn {
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            .card {
+                padding: 16px;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Vehicle Inspector</h1>
+            <p>Guided damage inspection system</p>
+        </div>
+
+        <!-- Vehicle Setup -->
+        <div id="setup-screen" class="card">
+            <div class="vehicle-input">
+                <label for="vehicleId">Vehicle ID/License Plate</label>
+                <input type="text" id="vehicleId" placeholder="e.g., POOL-001 or ABC-123" required>
+            </div>
+            
+            <div class="vehicle-input">
+                <label for="inspectorName">Inspector Name</label>
+                <input type="text" id="inspectorName" placeholder="Your name" required>
+            </div>
+
+            <div class="vehicle-input">
+                <label for="vehicleType">Vehicle Type</label>
+                <select id="vehicleType">
+                    <option value="sedan">Sedan</option>
+                    <option value="suv">SUV</option>
+                    <option value="hatchback">Hatchback</option>
+                    <option value="van">Van</option>
+                    <option value="truck">Truck</option>
+                </select>
+            </div>
+
+            <button class="start-btn" onclick="startInspection()">Start Inspection</button>
+        </div>
+
+        <!-- Photo Capture -->
+        <div id="photo-screen" class="photo-section">
+            <div class="card">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress"></div>
+                </div>
+
+                <div class="current-shot">
+                    <h3 id="currentShotTitle">Front View</h3>
+                    <p id="currentShotDesc">Position vehicle facing camera, centered in frame</p>
+                </div>
+
+                <div class="camera-container">
+                    <video id="camera" class="camera-view" autoplay playsinline></video>
+                    <canvas id="canvas" class="hidden"></canvas>
+                    
+                    <div class="overlay">
+                        <div class="vehicle-outline"></div>
+                        <div class="level-indicator">
+                            <div class="level-bubble" id="levelBubble"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="qualityCheck" class="quality-check">
+                    <p id="qualityMessage">Checking photo quality...</p>
+                </div>
+
+                <div class="capture-controls">
+                    <button class="btn btn-secondary" onclick="skipShot()" id="skipBtn">Skip</button>
+                    <button class="btn btn-primary" onclick="capturePhoto()" id="captureBtn">
+                        📸 Capture
+                    </button>
+                    <div id="photoPreview"></div>
+                </div>
+            </div>
+
+            <div class="card shot-checklist">
+                <h4 style="margin-bottom: 12px;">Inspection Progress</h4>
+                <div id="shotsList"></div>
+            </div>
+        </div>
+
+        <!-- Completion -->
+        <div id="completion-screen" class="card completion-screen">
+            <div class="success-icon">✓</div>
+            <h2>Inspection Complete!</h2>
+            <p style="margin: 16px 0; color: #6b7280;">All photos captured successfully</p>
+            
+            <div style="background: #f8fafc; padding: 16px; border-radius: 8px; margin: 16px 0; text-align: left;">
+                <p><strong>Vehicle:</strong> <span id="summaryVehicle"></span></p>
+                <p><strong>Inspector:</strong> <span id="summaryInspector"></span></p>
+                <p><strong>Date:</strong> <span id="summaryDate"></span></p>
+                <p><strong>Photos:</strong> <span id="summaryPhotoCount"></span></p>
+            </div>
+
+            <button class="btn btn-primary download-btn" onclick="downloadPhotos()">
+                📱 Download Photos
+            </button>
+            <button class="btn btn-secondary download-btn" onclick="startNew()">
+                🔄 New Inspection
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentShotIndex = 0;
+        let capturedPhotos = [];
+        let vehicleData = {};
+        let stream = null;
+        let deviceOrientation = { beta: 0, gamma: 0 };
+
+        // Standard shot configurations
+        const shotConfigurations = [
+            { name: "Front View", desc: "Position vehicle facing camera, centered in frame", angle: "front" },
+            { name: "Rear View", desc: "Position vehicle with rear facing camera", angle: "rear" },
+            { name: "Driver Side", desc: "Position camera at driver's side, showing full side profile", angle: "left" },
+            { name: "Passenger Side", desc: "Position camera at passenger side, showing full side profile", angle: "right" },
+            { name: "Front Left Corner", desc: "Focus on front left corner and bumper area", angle: "front-left" },
+            { name: "Front Right Corner", desc: "Focus on front right corner and bumper area", angle: "front-right" },
+            { name: "Interior Dashboard", desc: "Capture dashboard and interior condition", angle: "interior" },
+            { name: "Wheels & Tires", desc: "Capture all four wheels and tire condition", angle: "wheels" }
+        ];
+
+        // Initialize device orientation tracking
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener('deviceorientation', (event) => {
+                deviceOrientation.beta = event.beta || 0;
+                deviceOrientation.gamma = event.gamma || 0;
+                updateLevelIndicator();
+            });
+        }
+
+        function updateLevelIndicator() {
+            const bubble = document.getElementById('levelBubble');
+            const tiltThreshold = 5;
+            
+            const tiltX = Math.max(-20, Math.min(20, deviceOrientation.gamma));
+            const tiltY = Math.max(-20, Math.min(20, deviceOrientation.beta - 90));
+            
+            const isLevel = Math.abs(deviceOrientation.gamma) < tiltThreshold && 
+                           Math.abs(deviceOrientation.beta - 90) < tiltThreshold;
+            
+            bubble.style.transform = `translate(${tiltX}px, ${tiltY}px)`;
+            bubble.classList.toggle('tilted', !isLevel);
+        }
+
+        async function startInspection() {
+            const vehicleId = document.getElementById('vehicleId').value.trim();
+            const inspectorName = document.getElementById('inspectorName').value.trim();
+            const vehicleType = document.getElementById('vehicleType').value;
+
+            if (!vehicleId || !inspectorName) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            vehicleData = {
+                id: vehicleId,
+                inspector: inspectorName,
+                type: vehicleType,
+                timestamp: new Date().toISOString()
+            };
+
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('photo-screen').classList.add('active');
+
+            await initializeCamera();
+            initializeShotsList();
+            updateCurrentShot();
+        }
+
+        async function initializeCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                });
+                document.getElementById('camera').srcObject = stream;
+            } catch (error) {
+                console.error('Camera access denied:', error);
+                alert('Camera access is required for vehicle inspection');
+            }
+        }
+
+        function initializeShotsList() {
+            const shotsList = document.getElementById('shotsList');
+            shotsList.innerHTML = '';
+            
+            shotConfigurations.forEach((shot, index) => {
+                const shotItem = document.createElement('div');
+                shotItem.className = 'shot-item';
+                shotItem.innerHTML = `
+                    <div class="shot-check ${index === 0 ? 'current' : ''}" id="check-${index}">
+                        ${index < currentShotIndex ? '✓' : index === currentShotIndex ? '●' : ''}
+                    </div>
+                    <span>${shot.name}</span>
+                `;
+                shotsList.appendChild(shotItem);
+            });
+        }
+
+        function updateCurrentShot() {
+            if (currentShotIndex >= shotConfigurations.length) {
+                completeInspection();
+                return;
+            }
+
+            const shot = shotConfigurations[currentShotIndex];
+            document.getElementById('currentShotTitle').textContent = shot.name;
+            document.getElementById('currentShotDesc').textContent = shot.desc;
+            
+            // Update progress
+            const progress = ((currentShotIndex) / shotConfigurations.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+
+            // Update checklist
+            updateShotsList();
+        }
+
+        function updateShotsList() {
+            shotConfigurations.forEach((shot, index) => {
+                const check = document.getElementById(`check-${index}`);
+                check.className = 'shot-check';
+                check.innerHTML = '';
+                
+                if (index < currentShotIndex) {
+                    check.classList.add('completed');
+                    check.innerHTML = '✓';
+                } else if (index === currentShotIndex) {
+                    check.classList.add('current');
+                    check.innerHTML = '●';
+                }
+            });
+        }
+
+        async function capturePhoto() {
+            const video = document.getElementById('camera');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            // Convert to blob
+            canvas.toBlob(async (blob) => {
+                const photoData = {
+                    blob: blob,
+                    shot: shotConfigurations[currentShotIndex],
+                    timestamp: new Date().toISOString(),
+                    index: currentShotIndex
+                };
+
+                // Quality check
+                const quality = await checkPhotoQuality(canvas, ctx);
+                showQualityFeedback(quality);
+
+                if (quality.score > 0.6) {
+                    capturedPhotos.push(photoData);
+                    showPhotoPreview(canvas.toDataURL());
+                    
+                    setTimeout(() => {
+                        currentShotIndex++;
+                        updateCurrentShot();
+                        hideQualityFeedback();
+                        clearPhotoPreview();
+                    }, 1500);
+                }
+            }, 'image/jpeg', 0.8);
+        }
+
+        async function checkPhotoQuality(canvas, ctx) {
+            // Simple quality checks
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            // Check brightness
+            let totalBrightness = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                totalBrightness += brightness;
+            }
+            const avgBrightness = totalBrightness / (data.length / 4);
+            
+            // Check blur (simplified Laplacian variance)
+            const grayData = [];
+            for (let i = 0; i < data.length; i += 4) {
+                grayData.push((data[i] + data[i + 1] + data[i + 2]) / 3);
+            }
+            
+            let laplacianVar = 0;
+            const width = canvas.width;
+            for (let i = width + 1; i < grayData.length - width - 1; i++) {
+                const laplacian = Math.abs(
+                    -4 * grayData[i] + 
+                    grayData[i - 1] + grayData[i + 1] + 
+                    grayData[i - width] + grayData[i + width]
+                );
+                laplacianVar += laplacian * laplacian;
+            }
+            laplacianVar /= (grayData.length - 2 * width - 2);
+
+            // Quality scoring
+            const brightnessScore = avgBrightness > 50 && avgBrightness < 200 ? 1 : 0.5;
+            const sharpnessScore = laplacianVar > 100 ? 1 : 0.3;
+            const levelScore = Math.abs(deviceOrientation.gamma) < 10 ? 1 : 0.7;
+
+            return {
+                score: (brightnessScore + sharpnessScore + levelScore) / 3,
+                brightness: avgBrightness,
+                sharpness: laplacianVar,
+                level: Math.abs(deviceOrientation.gamma)
+            };
+        }
+
+        function showQualityFeedback(quality) {
+            const qualityCheck = document.getElementById('qualityCheck');
+            const qualityMessage = document.getElementById('qualityMessage');
+            
+            qualityCheck.classList.remove('error', 'success');
+            qualityCheck.classList.add('show');
+
+            if (quality.score > 0.6) {
+                qualityCheck.classList.add('success');
+                qualityMessage.textContent = '✓ Good quality photo captured!';
+            } else {
+                qualityCheck.classList.add('error');
+                let issues = [];
+                if (quality.brightness < 50) issues.push('too dark');
+                if (quality.brightness > 200) issues.push('too bright');
+                if (quality.sharpness < 100) issues.push('blurry');
+                if (quality.level > 10) issues.push('not level');
+                
+                qualityMessage.textContent = `⚠ Photo quality issues: ${issues.join(', ')}. Please retake.`;
+            }
+        }
+
+        function hideQualityFeedback() {
+            document.getElementById('qualityCheck').classList.remove('show');
+        }
+
+        function showPhotoPreview(dataUrl) {
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = `<img src="${dataUrl}" class="photo-preview" alt="Captured photo">`;
+        }
+
+        function clearPhotoPreview() {
+            document.getElementById('photoPreview').innerHTML = '';
+        }
+
+        function skipShot() {
+            if (confirm('Skip this shot? You can always come back to it later.')) {
+                currentShotIndex++;
+                updateCurrentShot();
+            }
+        }
+
+        function completeInspection() {
+            // Stop camera
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+
+            document.getElementById('photo-screen').classList.remove('active');
+            
+            // Show completion screen
+            document.getElementById('summaryVehicle').textContent = vehicleData.id;
+            document.getElementById('summaryInspector').textContent = vehicleData.inspector;
+            document.getElementById('summaryDate').textContent = new Date().toLocaleDateString();
+            document.getElementById('summaryPhotoCount').textContent = `${capturedPhotos.length} of ${shotConfigurations.length}`;
+            
+            document.getElementById('completion-screen').classList.add('show');
+        }
+
+        function downloadPhotos() {
+            // Create a zip-like structure for download
+            capturedPhotos.forEach((photo, index) => {
+                const link = document.createElement('a');
+                const fileName = `${vehicleData.id}_${photo.shot.angle}_${new Date().toISOString().split('T')[0]}.jpg`;
+                
+                link.href = URL.createObjectURL(photo.blob);
+                link.download = fileName;
+                link.click();
+                
+                // Clean up
+                setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+            });
+
+            // Also download inspection report
+            downloadInspectionReport();
+        }
+
+        function downloadInspectionReport() {
+            const report = {
+                vehicle: vehicleData,
+                photos: capturedPhotos.map(p => ({
+                    shot: p.shot.name,
+                    angle: p.shot.angle,
+                    timestamp: p.timestamp
+                })),
+                completedAt: new Date().toISOString(),
+                totalShots: shotConfigurations.length,
+                capturedShots: capturedPhotos.length
+            };
+
+            const blob = new Blob([JSON.stringify(report, null, 2)], {
+                type: 'application/json'
+            });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${vehicleData.id}_inspection_report_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        }
+
+        function startNew() {
+            // Reset state
+            currentShotIndex = 0;
+            capturedPhotos = [];
+            vehicleData = {};
+            
+            // Reset UI
+            document.getElementById('completion-screen').classList.remove('show');
+            document.getElementById('setup-screen').style.display = 'block';
+            document.getElementById('vehicleId').value = '';
+            document.getElementById('inspectorName').value = '';
+            document.getElementById('vehicleType').value = 'sedan';
+        }
+
+        // Service Worker registration for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:application/javascript,console.log("SW registered")');
+        }
+    </script>
+</body>
+</html>
