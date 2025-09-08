@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pool Car Manager</title>
     <link rel="manifest" href="data:application/json,{%22name%22:%22Pool%20Car%20Manager%22,%22short_name%22:%22PoolCars%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%232563eb%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232563eb'/%3E%3Ctext x='50' y='55' font-family='Arial' font-size='40' fill='white' text-anchor='middle'%3E🚗%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22}]}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#2563eb">
     <style>
         * {
@@ -14,7 +17,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
@@ -449,6 +452,12 @@
                 font-size: 14px;
             }
         }
+
+        @media (min-width: 601px) { /* For screens wider than typical phone */
+            .container {
+                max-width: 700px; /* Allow more horizontal space */
+            }
+        }
     </style>
 </head>
 <body>
@@ -480,34 +489,18 @@
                 <div class="form-section">
                     <h3>Personal Information</h3>
                     
-                    <div class="vehicle-input">
-                        <label for="employeeName">Full Name *</label>
-                        <input type="text" id="employeeName" placeholder="Your full name" required>
+                    <div class="two-column">
+                        <div class="vehicle-input">
+                            <label for="employeeName">Full Name *</label>
+                            <input type="text" id="employeeName" placeholder="Your full name" required>
+                        </div>
+                        
+                        <div class="vehicle-input">
+                            <label for="employeeId">Employee ID *</label>
+                            <input type="text" id="employeeId" placeholder="Your employee ID" required>
+                        </div>
                     </div>
                     
-                    <div class="vehicle-input">
-                        <label for="employeeId">Employee ID *</label>
-                        <input type="text" id="employeeId" placeholder="Your employee ID" required>
-                    </div>
-                    
-                    <div class="vehicle-input">
-                        <label for="department">Department *</label>
-                        <select id="department" required>
-                            <option value="">Select Department</option>
-                            <option value="HR">Human Resources</option>
-                            <option value="IT">Information Technology</option>
-                            <option value="Finance">Finance</option>
-                            <option value="Marketing">Marketing</option>
-                            <option value="Operations">Operations</option>
-                            <option value="Sales">Sales</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="vehicle-input">
-                        <label for="contactNumber">Contact Number *</label>
-                        <input type="tel" id="contactNumber" placeholder="+49 XXX XXXXXXX" required>
-                    </div>
                 </div>
 
                 <!-- Booking Details -->
@@ -555,41 +548,36 @@
                 <div class="form-section">
                     <h3>Trip Information</h3>
                     
-                    <div class="vehicle-input">
-                        <label for="purpose">Purpose of Trip *</label>
-                        <select id="purpose" required>
-                            <option value="">Select Purpose</option>
-                            <option value="client_meeting">Client Meeting</option>
-                            <option value="business_travel">Business Travel</option>
-                            <option value="site_visit">Site Visit</option>
-                            <option value="training">Training/Conference</option>
-                            <option value="logistics">Logistics/Transport</option>
-                            <option value="emergency">Emergency</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="vehicle-input">
-                        <label for="destination">Destination *</label>
-                        <input type="text" id="destination" placeholder="Where are you traveling to?" required>
-                    </div>
-                    
                     <div class="two-column">
                         <div class="vehicle-input">
-                            <label for="estimatedDistance">Distance (km)</label>
-                            <input type="number" id="estimatedDistance" placeholder="Est. distance" min="0">
+                            <label for="purpose">Purpose of Trip *</label>
+                            <select id="purpose" required>
+                                <option value="">Select Purpose</option>
+                                <option value="client_meeting">Client Meeting</option>
+                                <option value="business_travel">Business Travel</option>
+                                <option value="site_visit">Site Visit</option>
+                                <option value="training">Training/Conference</option>
+                                <option value="logistics">Logistics/Transport</option>
+                                <option value="emergency">Emergency</option>
+                                <option value="other">Other</option>
+                            </select>
                         </div>
                         
                         <div class="vehicle-input">
-                            <label for="passengers">Passengers</label>
-                            <select id="passengers">
-                                <option value="1">1 (Just driver)</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5+">5 or more</option>
-                            </select>
+                            <label for="destination">Destination *</label>
+                            <input type="text" id="destination" placeholder="Where are you traveling to?" required>
                         </div>
+                    </div>
+                    
+                    <div class="vehicle-input">
+                        <label for="passengers">Passengers</label>
+                        <select id="passengers">
+                            <option value="1">1 (Just driver)</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5+">5 or more</option>
+                        </select>
                     </div>
                     
                     <div class="vehicle-input">
@@ -602,41 +590,24 @@
                 <div class="form-section">
                     <h3>Compliance Requirements</h3>
                     
-                    <div class="checkbox-group">
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="validLicense" required>
-                            <span>I have a valid driver's license *</span>
-                        </label>
-                        
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="mandatoryTraining" required>
-                            <span>I have completed mandatory pool car training *</span>
-                        </label>
-                        
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="companyPolicy" required>
-                            <span>I agree to follow company vehicle policy *</span>
-                        </label>
-                        
-                        <label class="checkbox-item">
-                            <input type="checkbox" id="damageResponsibility" required>
-                            <span>I accept responsibility for any damage during my usage *</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Manager Approval -->
-                <div class="form-section">
-                    <h3>Manager Approval</h3>
-                    
-                    <div class="vehicle-input">
-                        <label for="managerName">Manager Name *</label>
-                        <input type="text" id="managerName" placeholder="Your direct manager's name" required>
-                    </div>
-                    
-                    <div class="vehicle-input">
-                        <label for="managerEmail">Manager Email *</label>
-                        <input type="email" id="managerEmail" placeholder="manager@company.com" required>
+                    <div class="checkbox-group two-column">
+                        <div>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="validLicense" required>
+                                <span>I have a valid driver's license *</span>
+                            </label>
+                            
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="mandatoryTraining" required>
+                                <span>I have completed mandatory pool car training *</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="companyPolicy" required>
+                                <span>I agree to follow company vehicle policy *</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -862,6 +833,7 @@
             // Navigation buttons
             document.getElementById('btn-show-booking').addEventListener('click', showBookingForm);
             document.getElementById('btn-show-inspection').addEventListener('click', showInspectionForm);
+            document.getElementById('btn-booking-back').addEventListener('click', showNavigation);
             document.getElementById('btn-setup-back').addEventListener('click', showNavigation);
             document.getElementById('btn-start-inspection').addEventListener('click', startInspection);
 
@@ -873,8 +845,6 @@
                 // Personal Information
                 employeeName: document.getElementById('employeeName').value.trim(),
                 employeeId: document.getElementById('employeeId').value.trim(),
-                department: document.getElementById('department').value,
-                contactNumber: document.getElementById('contactNumber').value.trim(),
                 
                 // Booking Details
                 startDate: document.getElementById('startDate').value,
@@ -886,9 +856,33 @@
                 // Trip Information
                 purpose: document.getElementById('purpose').value,
                 destination: document.getElementById('destination').value.trim(),
-                estimatedDistance: document.getElementById('estimatedDistance').value,
                 passengers: document.getElementById('passengers').value
             };
+        }
+
+        async function startInspection() {
+            const vehicleId = document.getElementById('vehicleId').value.trim();
+            const inspectorName = document.getElementById('inspectorName').value.trim();
+
+            if (!vehicleId || !inspectorName) {
+                alert('Please fill in both Vehicle ID and Inspector Name.');
+                return;
+            }
+
+            vehicleData = { vehicleId, inspectorName };
+            hideAllScreens();
+            document.getElementById('photo-screen').classList.add('active');
+
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const cameraView = document.getElementById('camera');
+                cameraView.srcObject = stream;
+                // The rest of your inspection setup logic will go here
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                alert('Could not access the camera. Please ensure you are on a secure (https) connection and have granted camera permissions.');
+                showNavigation(); // Go back to the home screen if camera fails
+            }
         }
 
         // The rest of your script was cut off. You'll need to add the remaining functions
